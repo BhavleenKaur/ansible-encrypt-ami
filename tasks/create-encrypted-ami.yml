@@ -1,0 +1,49 @@
+---
+
+# Encrypt the latest base AMI by copying it with encryption enabled and tagging
+# it Encrypted=true. This allows EC2 instances to bring up encrypted boot volumes
+# from the base AMI.
+# https://aws.amazon.com/blogs/aws/new-encrypted-ebs-boot-volumes/
+
+# We can't copy the CentOS community AMI directly to an encrypted image under our
+# account because it has a billing code associated with it. Amazon doesn't
+# allow that. And Packer doesn't allow it to be encrypted during the AMI
+# creation process for the same reasons. So we create a new AMI from the
+# community AMI via Packer and then copy our new unecrypted AMI to an encrypted
+# AMI. It's as hacky as it sounds but it is automated.
+# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/CopyingAMIs.html#d0e14555
+
+# Ansible/Boto do not yet support copy ami with encryption via ec2_ami_copy, so
+# we have this playbook for now.
+# https://github.com/ansible/ansible-modules-extras/pull/1409
+
+- name: Encrypt AMI by copying it
+  shell: "aws ec2 copy-image --source-region '{{ encrypt_ami_aws_region }}' --region '{{ encrypt_ami_aws_region }}' --encrypted --source-image-id '{{ encrypt_ami_source_ami_id }}' --name '{{ encrypt_ami_source_ami_name }}'"
+  register: encrypt_ami_encrypted_ami
+
+- set_fact: encrypt_ami_encrypted_ami_json="{{ encrypt_ami_encrypted_ami.stdout|from_json }}"
+- set_fact: encrypt_ami_encrypted_ami_id="{{ encrypt_ami_encrypted_ami_json['ImageId'] }}"
+
+- debug: var=encrypt_ami_encrypted_ami_id
+  when: encrypt_ami_debug
+
+# Retry until ami is available for tagging
+- name: Confirm encrypted AMI id.
+  ec2_ami_find:
+    owner: self
+    ami_id: "{{ encrypt_ami_encrypted_ami_id }}"
+    no_result_action: success
+    region: "{{ encrypt_ami_aws_region }}"
+    state: pending
+  register: encrypt_ami_confirm_encrypted
+  until: encrypt_ami_confirm_encrypted.results|length > 0
+  retries: 6
+  delay: 30
+
+- name: Tag encrypted AMI
+  ec2_tag:
+    region: "{{ encrypt_ami_aws_region }}"
+    resource: "{{ item.ami_id }}"
+    state: present
+    tags: "{{ encrypt_ami_source_tags | combine({ 'Encrypted':'true' }) }}"
+  with_items: encrypt_ami_confirm_encrypted.results

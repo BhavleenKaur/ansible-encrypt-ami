@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  remote_user: root
+
+  roles:
+    - role: role_under_test
+      encrypt_ami_source_search_tags:
+        Name: "base-0000000000"
+        Type: base
+        Source: reactiveops

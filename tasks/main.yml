@@ -1,0 +1,4 @@
+---
+
+- include: get-source-ami-info.yml
+- include: create-encrypted-ami.yml

@@ -1,0 +1,50 @@
+---
+
+- block:
+    - name: search for source ami by id if provided
+      ec2_ami_find:
+        region: "{{ encrypt_ami_aws_region }}"
+        owner: "{{ encrypt_ami_source_ami_search_owner }}"
+        ami_id: "{{ encrypt_ami_source_ami_id }}"
+        sort: 'name'
+        sort_order: 'descending'
+        sort_end: 1
+        no_result_action: 'fail'
+        state: 'available'
+      register: ami_match
+      until: ami_match.results|length > 0
+      retries: 10
+      delay: 30
+
+    - set_fact:
+        encrypt_ami_source_ami_id: "{{ ami_match.results[0].ami_id }}"
+        encrypt_ami_source_ami_name: "{{ ami_match.results[0].name }}"
+        encrypt_ami_source_tags: "{{ ami_match.results[0].tags }}"
+
+  when: encrypt_ami_source_ami_id is defined
+
+- block:
+    - name: search for source ami by tag if no ami id provided
+      ec2_ami_find:
+        region: "{{ encrypt_ami_aws_region }}"
+        owner: "{{ encrypt_ami_source_ami_search_owner }}"
+        ami_tags: "{{ encrypt_ami_source_search_tags }}"
+        sort: 'name'
+        sort_order: 'descending'
+        sort_end: 1
+        no_result_action: 'fail'
+        state: 'available'
+      register: ami_match
+      until: ami_match.results|length > 0
+      retries: 10
+      delay: 30
+
+    - set_fact:
+        encrypt_ami_source_ami_id: "{{ ami_match.results[0].ami_id }}"
+        encrypt_ami_source_ami_name: "{{ ami_match.results[0].name }}"
+        encrypt_ami_source_tags: "{{ ami_match.results[0].tags }}"
+
+  when: encrypt_ami_source_ami_id is undefined
+
+- debug: msg="{{ encrypt_ami_source_ami_id }} {{ encrypt_ami_source_ami_name }}"
+  when: encrypt_ami_debug

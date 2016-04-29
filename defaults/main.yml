@@ -1,0 +1,12 @@
+---
+
+encrypt_ami_aws_region: "{{ aws_region }}"
+encrypt_ami_source_ami_search_owner: self
+
+# encrypt_ami_source_search_tags: {}
+  # Example:
+  # Name: "base-0000000000"
+  # Source: "reactiveops"
+  # Type: "base"
+
+encrypt_ami_debug: "{{ debug|default('False') }}"
