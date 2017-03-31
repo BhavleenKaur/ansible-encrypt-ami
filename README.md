@@ -16,19 +16,28 @@ For those AMI's that cannot be copied one workaround is to create an AMI via Pac
 
 Create a copy from a specific AMI id:
 
-```
+```yaml
 - role: encrypt-ami
   encrypt_ami_source_ami_id: ami-000000000
 ```
 
 Create a copy from an AMI matching tags:
 
-```
+```yaml
 - role: encrypt-ami
   encrypt_ami_source_search_tags:
     Name: "{{ base_ami_name }}"
     Type: base
     Source: reactiveops
+```
+
+The default will only search for AMIs in 'self' / Account space. That can be changed by providing the owner.
+For example, to create a copy from a Cononical / Ubuntu AMI:
+
+```yaml
+- role: encrypt-ami
+  encrypt_ami_source_ami_search_owner: 099720109477
+  encrypt_ami_source_ami_id: ami-af22d9b9
 ```
 
 ## Tests

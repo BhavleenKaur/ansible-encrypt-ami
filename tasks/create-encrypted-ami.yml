@@ -46,4 +46,4 @@
     resource: "{{ item.ami_id }}"
     state: present
     tags: "{{ encrypt_ami_source_tags | combine({ 'Encrypted':'true' }) }}"
-  with_items: encrypt_ami_confirm_encrypted.results
+  with_items: "{{ encrypt_ami_confirm_encrypted.results }}"

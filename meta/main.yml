@@ -1,2 +1,17 @@
 ---
+galaxy_info:
+  author:  "Dave Konopka (@davekonopka) with minor contribution by Matthias Johnson (@opennomad)"
+  company: ReactiveOps
+  description: A role to create an encrypted AMI from an unencrypted source AMI
+  license: MIT
+  min_ansible_version: 2.1
+  galaxy_tags:
+    - cloud
+    - aws
+    - encryption
+  categories:
+    - cloud
+    - aws
+    - encryption
+
 dependencies: []
